@@ -1,92 +1,64 @@
-console.log("HieUYeuNgoc");
+const API_URL = 'https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=3fd2be6f0c70a2a598f084ddfb75487c&page=1'
+const IMG_PATH = 'https://image.tmdb.org/t/p/w1280'
+const SEARCH_API = 'https://api.themoviedb.org/3/search/movie?api_key=3fd2be6f0c70a2a598f084ddfb75487c&query="'
 
-var canvas = document.getElementById("canvas");
-var c = canvas.getContext('2d');
-var tx = window.innerWidth;
-var ty = window.innerHeight;
-canvas.width = tx;
-canvas.height = ty;
+const main = document.getElementById('main')
+const form = document.getElementById('form')
+const search = document.getElementById('search')
 
-var mouseX = 0, mouseY = 0;
+getMovies(API_URL)
 
-addEventListener('mousemove', function(event) {
-  mouseX = event.clientX;
-  mouseY = event.clientY;
-});
+async function getMovies(url) {
+  const res = await fetch(url)
+  const data = await res.json()
 
-var grav = 0.99;
-c.strokeWidth=5;
-function randomColor() {
-  return (
-    "rgba(" +
-    Math.round(Math.random() * 250) +
-    "," +
-    Math.round(Math.random() * 250) +
-    "," +
-    Math.round(Math.random() * 250) +
-    "," +
-    Math.ceil(Math.random() * 10) / 10 +
-    ")"
-  );
+  showMovies(data.results)
 }
 
-function Ball() {
-  this.color = randomColor();
-  this.radius = Math.random() * 20 + 14;
-  this.startradius = this.radius;
-  this.x = Math.random() * (tx - this.radius * 2) + this.radius;
-  this.y = Math.random() * (ty - this.radius);
-  this.dy = Math.random() * 2;
-  this.dx = Math.round((Math.random() - 0.5) * 10);
-  this.vel = Math.random() / 5;
-  this.update = function() {
-    c.beginPath();
-    c.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-    c.fillStyle = this.color;
-    c.fill();
-  };
+function showMovies(movies) {
+  main.innerHTML = ''
+
+  movies.forEach((movie) => {
+    const { title, poster_path, vote_average, overview } = movie
+
+    const movieEl = document.createElement('div')
+    movieEl.classList.add('movie')
+
+    movieEl.innerHTML = `
+      <img src="${IMG_PATH + poster_path}" alt="${title}">
+            <div class="movie-info">
+          <h3>${title}</h3>
+          <span class="${getClassByRate(vote_average)}">${vote_average}</span>
+            </div>
+            <div class="overview">
+          <h3>Overview</h3>
+          ${overview}
+        </div>
+    `
+    main.appendChild(movieEl)
+  })
 }
 
-var bal = [];
-for (var i = 0; i < 50; i++){
-  bal.push(new Ball());
-}
-
-function animate() {
-  if (tx != window.innerWidth || ty != window.innerHeight) {
-    tx = window.innerWidth;
-    ty = window.innerHeight;
-    canvas.width = tx;
-    canvas.height = ty;
-  }
-  requestAnimationFrame(animate);
-  c.clearRect(0, 0, tx, ty);
-  for (var i = 0; i < bal.length; i++) {
-    bal[i].update(tx, ty);
-    bal[i].y += bal[i].dy;
-    bal[i].x += bal[i].dx;
-    if (bal[i].y + bal[i].radius >= ty) {
-      bal[i].dy = -bal[i].dy * grav;
-    } else {
-      bal[i].dy += bal[i].vel;
-    }
-    if (bal[i].x + bal[i].radius >= tx || bal[i].x + bal[i].radius < 0){
-      bal[i].x = -bal[i].dx;
-    }
-    if (mouseX > bal[i].x - 20 && mouseX < bal[i].x + 20 &&
-      mouseY > bal[i].y - 50 && mouseY < bal[i].y + 50 && bal[i].radius < 70){
-        bal[i].radius += 5;
-      } else {
-        if (bal[i].radius > bal[i].startradius) {
-          bal[i].radius += -5;
-        }
-      }
+function getClassByRate(vote) {
+  if(vote >= 8) {
+    return 'green'
+  } else if (vote >= 5) {
+    return 'orange'
+  } else {
+    return 'red'
   }
 }
 
-animate();
+form.addEventListener('submit', (e) => {
+  e.preventDefault()
+  const searchTerm = search.value
 
-setInterval(function() {
-  bal.push(new Ball());
-  bal.splice(0, 1);
-}, 400);
+  if(searchTerm && searchTerm != '') {
+    getMovies(SEARCH_API + searchTerm)
+
+    search.value =''
+  } else {
+    window.location.reload()
+  }
+})
+
