@@ -1,5 +1,20 @@
 body{
   margin: 0;
-  background-color: rgb(56, 220, 250);
+  background-color: rgb(255, 255, 255);
   overflow: hidden;
+  display: flex;
+}
+
+.container-section{
+  display: flex;
+  position: relative;
+}
+
+#area1, #area2, #area3{
+  width: 170px;
+  height: 70px;
+  padding: 10px;
+  border: 1px solid #141414;
+  margin-right: 20px;
+  margin-left: 20px;
 }
